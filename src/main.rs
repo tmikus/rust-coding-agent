@@ -6,6 +6,9 @@ mod tools;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::Config::new()?;
-    let mut agent = agent::Agent::new(config.api_key, vec![tools::read_file::read_file_tool()])?;
+    let mut agent = agent::Agent::new(config.api_key, vec![
+        tools::list_files::list_files_tool(),
+        tools::read_file::read_file_tool(),
+    ])?;
     agent.run().await
 }

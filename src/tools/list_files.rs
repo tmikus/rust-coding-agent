@@ -1,0 +1,37 @@
+use crate::tool::{Tool, ToolInputValidator};
+use anthropic_rust::ContentBlock;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use std::fs;
+
+#[derive(Serialize, Deserialize, JsonSchema, Debug)]
+pub struct ListFilesInput {
+    #[schemars(description = "Optional relative path to list files from. Defaults to current directory if not provided.")]
+    path: Option<String>,
+}
+
+pub fn list_files_tool() -> Tool {
+    Tool {
+        description: "List files and directories at a given path. If no path is provided, lists files in the current directory.".into(),
+        name: "list_files".into(),
+        execute: Box::new(|input| {
+            let input: ListFilesInput = serde_json::from_value(input)?;
+            execute_list_files(input)
+        }),
+        validator: ToolInputValidator::new::<ListFilesInput>(),
+    }
+}
+
+fn execute_list_files(input: ListFilesInput) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
+    let path = input.path.unwrap_or_else(|| ".".to_string());
+    let files = fs::read_dir(path)?;
+    let mut content = vec![];
+    for file in files {
+        let file = file?;
+        let file_name = file.file_name().to_string_lossy().to_string();
+        content.push(file_name);
+    }
+    serde_json::to_string(&content)
+        .map(|s| vec![ContentBlock::Text { citations: None, text: s }])
+        .map_err(|e| e.into())
+}
