@@ -1,0 +1,13 @@
+mod agent;
+mod config;
+mod tool;
+mod tools;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = config::Config::new()?;
+    let mut agent = agent::Agent::new(config.api_key, vec![
+        tools::read_file::read_file_tool(),
+    ])?;
+    agent.run().await
+}
