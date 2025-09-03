@@ -25,7 +25,14 @@ fn execute_list_files(input: ListFilesInput) -> Result<Vec<ContentBlock>, Box<dy
     for file in files {
         let file = file?;
         let file_name = file.file_name().to_string_lossy().to_string();
-        content.push(file_name);
+        if file.file_type()?.is_dir() {
+            if file_name == ".direnv" || file_name.starts_with(".direnv/") {
+                continue;
+            }
+            content.push(file_name + "/");
+        } else {
+            content.push(file_name);
+        }
     }
     serde_json::to_string(&content)
         .map(|s| vec![ContentBlock::Text { citations: None, text: s }])

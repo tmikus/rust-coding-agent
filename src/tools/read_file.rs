@@ -6,6 +6,7 @@ use std::fs;
 
 #[derive(Serialize, Deserialize, JsonSchema, Debug)]
 pub struct ReadFileInput {
+    #[schemars(description = "The relative path of a file in the working directory.")]
     path: String,
 }
 

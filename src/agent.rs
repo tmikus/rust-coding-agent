@@ -93,7 +93,7 @@ impl Agent {
                             let tool = match self.tools.iter().filter(|t| &t.name == name).next() {
                                 Some(tool) => tool,
                                 None => {
-                                    println!("Tool not found");
+                                    println!("Tool not found: {}", name);
                                     continue;
                                 }
                             };
