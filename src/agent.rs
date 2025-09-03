@@ -1,11 +1,11 @@
-use std::io::{stdin, Write};
-use anthropic_rust::{ChatRequest, Client, ContentBlock, MessageParam, Model, Role};
 use crate::tool::Tool;
+use anthropic_rust::{ChatRequest, Client, ContentBlock, MessageParam, Model, Role};
+use std::io::{Write, stdin};
 
 pub struct Agent {
     client: Client,
     messages: Vec<MessageParam>,
-    tools: Vec<Tool>
+    tools: Vec<Tool>,
 }
 
 impl Agent {
@@ -27,18 +27,19 @@ impl Agent {
         let mut buffer = String::new();
         match stdin().read_line(&mut buffer) {
             Ok(_) => Some(buffer),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
     fn get_tools(&self) -> Vec<anthropic_rust::Tool> {
-        self.tools.iter()
-            .map(|t|
+        self.tools
+            .iter()
+            .map(|t| {
                 anthropic_rust::Tool::builder(t.name.clone())
                     .description(t.description.clone())
                     .schema_value(t.validator.schema.clone())
                     .build()
-            )
+            })
             .collect()
     }
 
@@ -46,7 +47,7 @@ impl Agent {
         loop {
             let user_input = match self.get_user_message() {
                 Some(input) => input,
-                None => break
+                None => break,
             };
             if user_input.trim() == "" {
                 continue;
@@ -58,14 +59,17 @@ impl Agent {
                 }],
                 role: Role::User,
             });
-            let mut message = self.client.execute_chat(ChatRequest {
-                messages: self.messages.clone(),
-                system: None,
-                tools: Some(self.get_tools()),
-                temperature: None,
-                top_p: None,
-                stop_sequences: None,
-            }).await?;
+            let mut message = self
+                .client
+                .execute_chat(ChatRequest {
+                    messages: self.messages.clone(),
+                    system: None,
+                    tools: Some(self.get_tools()),
+                    temperature: None,
+                    top_p: None,
+                    stop_sequences: None,
+                })
+                .await?;
             self.messages.push(message.clone().into());
             // Keep processing until Claude stops using tools
             loop {
@@ -82,9 +86,15 @@ impl Agent {
                         ContentBlock::Document { .. } => {
                             println!("Claude: <DOCUMENT>");
                         }
-                        ContentBlock::ToolUse { id, name, input, .. } => {
+                        ContentBlock::ToolUse {
+                            id, name, input, ..
+                        } => {
                             has_tool_use = true;
-                            println!("Tool use detected: {} with input {}", name, input.to_string());
+                            println!(
+                                "Tool use detected: {} with input {}",
+                                name,
+                                input.to_string()
+                            );
                             let tool = match self.tools.iter().filter(|t| &t.name == name).next() {
                                 Some(tool) => tool,
                                 None => {
@@ -93,23 +103,19 @@ impl Agent {
                                 }
                             };
                             match (tool.execute)(&tool, input.to_owned()) {
-                                Ok(result) => {
-                                    tool_results.push(ContentBlock::ToolResult {
-                                        tool_use_id: id.to_owned(),
-                                        content: result,
-                                        is_error: Some(false),
-                                    })
-                                }
-                                Err(e) => {
-                                    tool_results.push(ContentBlock::ToolResult {
-                                        tool_use_id: id.to_owned(),
-                                        content: vec![ContentBlock::Text {
-                                            text: e.to_string(),
-                                            citations: None,
-                                        }],
-                                        is_error: Some(true),
-                                    })
-                                }
+                                Ok(result) => tool_results.push(ContentBlock::ToolResult {
+                                    tool_use_id: id.to_owned(),
+                                    content: result,
+                                    is_error: Some(false),
+                                }),
+                                Err(e) => tool_results.push(ContentBlock::ToolResult {
+                                    tool_use_id: id.to_owned(),
+                                    content: vec![ContentBlock::Text {
+                                        text: e.to_string(),
+                                        citations: None,
+                                    }],
+                                    is_error: Some(true),
+                                }),
                             }
                         }
                         ContentBlock::ToolResult { .. } => {
@@ -119,7 +125,7 @@ impl Agent {
                 }
                 // If Claude didn't use any tools, break out of the loop
                 if !has_tool_use {
-                    break
+                    break;
                 }
                 // Add the tool results to the message and send it back to Claude
                 self.messages.push(MessageParam {
@@ -127,14 +133,17 @@ impl Agent {
                     role: Role::User,
                 });
                 // Send the message back to Claude
-                message = self.client.execute_chat(ChatRequest {
-                    messages: self.messages.clone(),
-                    system: None,
-                    tools: None,
-                    temperature: None,
-                    top_p: None,
-                    stop_sequences: None,
-                }).await?;
+                message = self
+                    .client
+                    .execute_chat(ChatRequest {
+                        messages: self.messages.clone(),
+                        system: None,
+                        tools: None,
+                        temperature: None,
+                        top_p: None,
+                        stop_sequences: None,
+                    })
+                    .await?;
                 self.messages.push(message.clone().into());
             }
         }

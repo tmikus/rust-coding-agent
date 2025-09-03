@@ -1,8 +1,8 @@
-use std::fs;
+use crate::tool::{Tool, ToolInputValidator};
 use anthropic_rust::ContentBlock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::tool::{ToolInputValidator, Tool};
+use std::fs;
 
 #[derive(Serialize, Deserialize, JsonSchema, Debug)]
 struct ReadFileInput {
@@ -18,7 +18,10 @@ pub fn read_file_tool() -> Tool {
     }
 }
 
-fn execute_read_file(tool: &Tool, input: serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
+fn execute_read_file(
+    tool: &Tool,
+    input: serde_json::Value,
+) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
     let input = tool.validator.get_value::<ReadFileInput>(input)?;
     println!("Executing read_file tool with path: {}", input.path);
     let content = fs::read_to_string(input.path)?;

@@ -10,7 +10,9 @@ impl Config {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         dotenv().context("Failed to load .env file")?;
         Ok(Self {
-            api_key: env::var("ANTHROPIC_API_KEY").context("Missing ANTHROPIC_API_KEY")?.to_string(),
+            api_key: env::var("ANTHROPIC_API_KEY")
+                .context("Missing ANTHROPIC_API_KEY")?
+                .to_string(),
         })
     }
 }
