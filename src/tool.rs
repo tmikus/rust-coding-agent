@@ -4,10 +4,7 @@ use serde::de::DeserializeOwned;
 
 pub struct Tool {
     pub description: String,
-    pub execute: fn(
-        tool: &Tool,
-        input: serde_json::Value,
-    ) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>>,
+    pub execute: Box<dyn Fn(serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>>>,
     pub name: String,
     pub validator: ToolInputValidator,
 }

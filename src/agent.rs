@@ -102,7 +102,7 @@ impl Agent {
                                     continue;
                                 }
                             };
-                            match (tool.execute)(&tool, input.to_owned()) {
+                            match (tool.execute)(input.to_owned()) {
                                 Ok(result) => tool_results.push(ContentBlock::ToolResult {
                                     tool_use_id: id.to_owned(),
                                     content: result,

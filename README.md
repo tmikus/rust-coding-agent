@@ -130,12 +130,15 @@ pub fn your_tool() -> Tool {
     Tool {
         name: "your_tool".into(),
         description: "Description of what your tool does".into(),
-        execute: execute_your_tool,
+        execute: Box::new(|input| {
+            let input: YourToolInput = serde_json::from_value(input)?;
+            execute_your_tool(input)
+        }),
         validator: ToolInputValidator::new::<YourToolInput>(),
     }
 }
 
-fn execute_your_tool(tool: &Tool, input: serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
+fn execute_your_tool(input: YourToolInput) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
     // Implementation here
 }
 ```
