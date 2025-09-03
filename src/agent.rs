@@ -90,11 +90,6 @@ impl Agent {
                             id, name, input, ..
                         } => {
                             has_tool_use = true;
-                            println!(
-                                "Tool use detected: {} with input {}",
-                                name,
-                                input.to_string()
-                            );
                             let tool = match self.tools.iter().filter(|t| &t.name == name).next() {
                                 Some(tool) => tool,
                                 None => {
@@ -102,7 +97,7 @@ impl Agent {
                                     continue;
                                 }
                             };
-                            match (tool.execute)(input.to_owned()) {
+                            match tool.execute(input.to_owned()) {
                                 Ok(result) => tool_results.push(ContentBlock::ToolResult {
                                     tool_use_id: id.to_owned(),
                                     content: result,

@@ -1,4 +1,4 @@
-use crate::tool::{Tool, ToolInputValidator};
+use crate::tool::Tool;
 use anthropic_rust::ContentBlock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -10,15 +10,11 @@ pub struct ReadFileInput {
 }
 
 pub fn read_file_tool() -> Tool {
-    Tool {
-        description: "Read the contents of a given relative file path. Use this when you want to see what's inside a file. Do not use this with directory names.".into(),
-        name: "read_file".into(),
-        execute: Box::new(|input| {
-            let input: ReadFileInput = serde_json::from_value(input)?;
-            execute_read_file(input)
-        }),
-        validator: ToolInputValidator::new::<ReadFileInput>(),
-    }
+    Tool::new(
+        "read_file".into(),
+        "Read the contents of a given relative file path. Use this when you want to see what's inside a file. Do not use this with directory names.".into(),
+        execute_read_file,
+    )
 }
 
 fn execute_read_file(input: ReadFileInput) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {

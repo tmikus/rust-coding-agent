@@ -4,9 +4,33 @@ use serde::de::DeserializeOwned;
 
 pub struct Tool {
     pub description: String,
-    pub execute: Box<dyn Fn(serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>>>,
+    execute_fn: Box<dyn Fn(&Tool, serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>>>,
     pub name: String,
     pub validator: ToolInputValidator,
+}
+
+impl Tool {
+    pub fn new<T: DeserializeOwned + 'static>(
+        name: String,
+        description: String,
+        execute_fn: impl Fn(T) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> + 'static,
+    ) -> Self
+    where
+        T: JsonSchema,
+    {
+        Self {
+            name,
+            description,
+            execute_fn: Box::new(move |tool, input| {
+                execute_fn(tool.validator.get_value(input)?)
+            }),
+            validator: ToolInputValidator::new::<T>(),
+        }
+    }
+
+    pub fn execute(&self, input: serde_json::Value) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
+        (self.execute_fn)(self, input)
+    }
 }
 
 pub struct ToolInputValidator {

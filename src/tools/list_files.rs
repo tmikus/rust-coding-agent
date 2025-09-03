@@ -1,4 +1,4 @@
-use crate::tool::{Tool, ToolInputValidator};
+use crate::tool::Tool;
 use anthropic_rust::ContentBlock;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -11,15 +11,11 @@ pub struct ListFilesInput {
 }
 
 pub fn list_files_tool() -> Tool {
-    Tool {
-        description: "List files and directories at a given path. If no path is provided, lists files in the current directory.".into(),
-        name: "list_files".into(),
-        execute: Box::new(|input| {
-            let input: ListFilesInput = serde_json::from_value(input)?;
-            execute_list_files(input)
-        }),
-        validator: ToolInputValidator::new::<ListFilesInput>(),
-    }
+    Tool::new(
+        "list_files".into(),
+        "List files and directories at a given path. If no path is provided, lists files in the current directory.".into(),
+        execute_list_files,
+    )
 }
 
 fn execute_list_files(input: ListFilesInput) -> Result<Vec<ContentBlock>, Box<dyn std::error::Error>> {
